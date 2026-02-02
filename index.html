@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Установить расширение</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 50px; 
+            max-width: 400px; 
+            margin: auto; 
+        }
+        button { 
+            background: #FFCC00; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 20px; 
+            border-radius: 5px; 
+        }
+        .warning { 
+            background: #fff3cd; 
+            border: 1px solid #ffc107; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 20px 0; 
+            text-align: left; 
+        }
+    </style>
+</head>
+<body>
+    <h2>Установка расширения для перенаправления</h2>
+    
+    <div class="warning">
+        <strong>Важно:</strong>
+        <ul>
+            <li>Включите "Режим разработчика" в расширениях</li>
+            <li>Расширение будет работать только в Яндекс/Chrome</li>
+            <li>На телефоне установка сложнее</li>
+        </ul>
+    </div>
+
+    <button onclick="installExtension()">Установить расширение</button>
+    
+    <p id="status"></p>
+    
+    <script>
+        function installExtension() {
+            const manifest = {
+                "manifest_version": 3,
+                "name": "Мое перенаправление",
+                "version": "1.0",
+                "permissions": ["webRequest", "webRequestBlocking"],
+                "host_permissions": ["<all_urls>"],
+                "background": {
+                    "service_worker": "data:application/javascript," + encodeURIComponent(`
+                        const redirectRules = {
+                            'youtube': 'https://example.com',
+                            'ютуб': 'https://example.com',
+                            'yout': 'https://example.com',
+                            'yt': 'https://example.com'
+                        };
+                        
+                        chrome.webRequest.onBeforeRequest.addListener(
+                            function(details) {
+                                const url = details.url.toLowerCase();
+                                for (const [keyword, redirectUrl] of Object.entries(redirectRules)) {
+                                    if (url.includes(keyword)) {
+                                        return {redirectUrl: redirectUrl};
+                                    }
+                                }
+                            },
+                            {urls: ["<all_urls>"]},
+                            ["blocking"]
+                        );
+                    `)
+                }
+            };
+
+            // Создаем ссылку для скачивания manifest.json
+            const blob = new Blob([JSON.stringify(manifest, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            // Инструкция для пользователя
+            document.getElementById('status').innerHTML = `
+                <div class="warning">
+                    <strong>Инструкция:</strong><br>
+                    1. Скачайте файл: <a href="${url}" download="manifest.json">manifest.json</a><br>
+                    2. Откройте: <code>browser://extensions/</code><br>
+                    3. Включите "Режим разработчика"<br>
+                    4. Нажмите "Загрузить распакованное расширение"<br>
+                    5. Выберите скачанный файл manifest.json
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
